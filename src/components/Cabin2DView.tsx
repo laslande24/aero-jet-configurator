@@ -1,36 +1,28 @@
 import { useState } from 'react'
 import { useConfiguratorStore } from '@/store/configurator'
+import { AIRCRAFT_BY_ID } from '@/data/aircraft'
 import { cn } from '@/lib/cn'
-import planeImg from '@/assets/plane-2d.webp'
 
 type HotspotId = 'door' | 'cabin'
 
-interface Zone {
-  id: HotspotId
-  label: string
-  section: number
-  /** Percent-based rect over the aircraft image. */
-  left: string
-  top: string
-  width: string
-  height: string
-}
-
-/* Clickable regions aligned on the photo — door+airstair, cutaway+windows. */
-const ZONES: Zone[] = [
-  { id: 'door', label: 'Entrer dans la cabine', section: 0, left: '18.6%', top: '6%', width: '8.4%', height: '88%' },
-  { id: 'cabin', label: 'Visiter la cabine', section: 1, left: '28%', top: '8%', width: '42%', height: '42%' },
-]
-
 /**
- * Default 2D exterior — the mockup's photoreal side profile (transparent
- * WebP, 91 KB). The open door and the cabin cutaway/window band are
- * HTML hotspots firing the same store actions as the 3D ones.
+ * Default 2D exterior — flat side profile of the ACTIVE aircraft. Artwork
+ * and hotspot geometry both come from the aircraft record, so switching
+ * models swaps the picture and re-aligns the clickable zones. The door and
+ * the cabin cutaway fire the same store actions as their 3D counterparts.
  * No WebGL: three.js never loads until the user picks 3D.
  */
 export function Cabin2DView() {
   const enterInterior = useConfiguratorStore((s) => s.enterInterior)
+  const activeId = useConfiguratorStore((s) => s.activeAircraftId)
   const [hover, setHover] = useState<HotspotId | null>(null)
+
+  const aircraft = AIRCRAFT_BY_ID[activeId]
+  const { image, door, cabin } = aircraft.view2d
+  const zones = [
+    { id: 'door' as const, label: 'Entrer dans la cabine', section: 0, rect: door },
+    { id: 'cabin' as const, label: 'Visiter la cabine', section: 1, rect: cabin },
+  ]
 
   return (
     /* negative right margins cancel the panel paddings so the clipped tail
@@ -51,13 +43,14 @@ export function Cabin2DView() {
       {/* mockup framing: nose starts ~1/5 in, tail bleeds off the right edge */}
       <div className="relative ml-auto mt-2 w-[80%]">
         <img
-          src={planeImg}
-          alt="Bombardier Global 6000 de profil, porte ouverte avec escalier et découpe montrant la cabine"
+          key={aircraft.id}
+          src={image}
+          alt={`${aircraft.manufacturer} ${aircraft.model} de profil, porte ouverte avec escalier et découpe montrant la cabine`}
           className="w-full select-none"
           draggable={false}
         />
 
-        {ZONES.map((z) => (
+        {zones.map((z) => (
           <button
             key={z.id}
             type="button"
@@ -73,7 +66,7 @@ export function Cabin2DView() {
               'focus-visible:border-gold focus-visible:bg-gold/10',
               hover === z.id ? 'border-gold bg-gold/10' : 'border-transparent',
             )}
-            style={{ left: z.left, top: z.top, width: z.width, height: z.height }}
+            style={z.rect}
           />
         ))}
       </div>

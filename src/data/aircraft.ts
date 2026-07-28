@@ -1,3 +1,6 @@
+import global6000Img from '@/assets/plane-2d.webp'
+import g650Img from '@/assets/plane-g650.webp'
+
 export interface CabinZone {
   id: string
   name: string
@@ -15,6 +18,21 @@ export interface JetParams {
   accent: string
 }
 
+/** Percent-based rect over the 2D profile image. */
+export interface Hotspot2D {
+  left: string
+  top: string
+  width: string
+  height: string
+}
+
+/** Flat side-profile artwork + the clickable regions drawn on it. */
+export interface View2D {
+  image: string
+  door: Hotspot2D
+  cabin: Hotspot2D
+}
+
 export interface Aircraft {
   id: string
   manufacturer: string
@@ -26,6 +44,8 @@ export interface Aircraft {
   modelUrl?: string
   /** Card thumbnail — 3/4 aerial render of the 3D model (public/thumbs). */
   thumbnail: string
+  /** 2D exterior view — artwork and hotspot geometry differ per aircraft. */
+  view2d: View2D
   /** Procedural fallback geometry. */
   jet: JetParams
   /** Camera position preset for this aircraft. */
@@ -55,6 +75,11 @@ export const AIRCRAFT: Aircraft[] = [
     },
     cameraPos: [0, 0.55, 10.2],
     thumbnail: '/thumbs/global-6000.png',
+    view2d: {
+      image: global6000Img,
+      door: { left: '18.6%', top: '6%', width: '8.4%', height: '88%' },
+      cabin: { left: '28%', top: '8%', width: '42%', height: '42%' },
+    },
   },
   {
     id: 'g650',
@@ -78,6 +103,11 @@ export const AIRCRAFT: Aircraft[] = [
     },
     cameraPos: [0, 0.65, 11.4],
     thumbnail: '/thumbs/g650.png',
+    view2d: {
+      image: g650Img,
+      door: { left: '13.5%', top: '26%', width: '8%', height: '74%' },
+      cabin: { left: '44.5%', top: '18%', width: '18%', height: '40%' },
+    },
   },
 ]
 

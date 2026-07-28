@@ -102,6 +102,9 @@ function Director({ overlayRef }: DirectorProps) {
   const activeId = useConfiguratorStore((s) => s.activeAircraftId)
   const viewMode = useConfiguratorStore((s) => s.viewMode)
   const sectionIndex = useConfiguratorStore((s) => s.sectionIndex)
+  const autoRotate = useConfiguratorStore((s) => s.autoRotate)
+  const zoomTick = useConfiguratorStore((s) => s.zoomTick)
+  const resetTick = useConfiguratorStore((s) => s.resetTick)
 
   const [shown, setShown] = useState<{ aircraftId: string; mode: ViewMode }>({
     aircraftId: activeId,
@@ -324,6 +327,93 @@ function Director({ overlayRef }: DirectorProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionIndex, shown.mode, shown.aircraftId])
 
+  /* ---- toolbar: auto-orbit ---------------------------------------------
+     Demand rendering would freeze the orbit after one frame, so pump
+     invalidate() on rAF for as long as it runs. */
+  useEffect(() => {
+    if (!autoRotate) return
+    let raf = 0
+    const tick = () => {
+      invalidate()
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [autoRotate, invalidate])
+
+  /* ---- toolbar: step zoom (dolly toward the target, wraps at the end) --- */
+  useEffect(() => {
+    if (zoomTick === 0) return
+    const controls = controlsRef.current
+    if (!controls) return
+    const target = controls.target
+    const dir = new THREE.Vector3().subVectors(camera.position, target)
+    const dist = dir.length()
+    /* four steps in, then back out to the far end */
+    const next = dist <= controls.minDistance * 1.12
+      ? controls.maxDistance * 0.85
+      : Math.max(controls.minDistance, dist * 0.78)
+    const to = dir.normalize().multiplyScalar(next).add(target)
+
+    if (prefersReducedMotion()) {
+      camera.position.copy(to)
+      controls.update()
+      invalidate()
+      return
+    }
+    const tween = gsap.to(camera.position, {
+      x: to.x,
+      y: to.y,
+      z: to.z,
+      duration: 0.6,
+      ease: 'power3.out',
+      onUpdate: () => invalidate(),
+    })
+    return () => {
+      tween.kill()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomTick])
+
+  /* ---- toolbar: restore the default framing ---------------------------- */
+  useEffect(() => {
+    if (resetTick === 0) return
+    const controls = controlsRef.current
+    if (!controls) return
+    const isInterior = shown.mode === 'interior'
+    const dest = isInterior
+      ? interiorCam(shown.aircraftId, sectionIndex)
+      : { pos: AIRCRAFT_BY_ID[shown.aircraftId].cameraPos, target: EXTERIOR_TARGET }
+
+    if (prefersReducedMotion()) {
+      jumpTo(shown.aircraftId, shown.mode, sectionIndex)
+      return
+    }
+    const tl = gsap.timeline({ onUpdate: () => invalidate() })
+    tl.to(camera.position, {
+      x: dest.pos[0],
+      y: dest.pos[1],
+      z: dest.pos[2],
+      duration: 0.8,
+      ease: 'power3.inOut',
+    }).to(
+      controls.target,
+      {
+        x: dest.target[0],
+        y: dest.target[1],
+        z: dest.target[2],
+        duration: 0.8,
+        ease: 'power3.inOut',
+        onUpdate: () => controls.update(),
+      },
+      0,
+    )
+    return () => {
+      tl.kill()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetTick])
+
   const interior = shown.mode === 'interior'
   const cam = interior ? interiorCam(shown.aircraftId, sectionIndex) : null
 
@@ -347,6 +437,8 @@ function Director({ overlayRef }: DirectorProps) {
         target={interior ? cam!.target : EXTERIOR_TARGET}
         enablePan={false}
         enableDamping
+        autoRotate={autoRotate && !interior}
+        autoRotateSpeed={1.4}
         dampingFactor={0.08}
         rotateSpeed={interior ? 0.35 : 0.55}
         minDistance={interior ? 0.4 : 7}
@@ -377,6 +469,7 @@ function StudioEnvironment() {
 /** Interactive 3D stage — exterior showcase + cabin interior with seat picking. */
 export function Stage() {
   const overlayRef = useRef<HTMLDivElement>(null)
+  const autoRotate = useConfiguratorStore((s) => s.autoRotate)
   const initialCam = AIRCRAFT_BY_ID[useConfiguratorStore.getState().activeAircraftId].cameraPos
 
   return (
@@ -386,7 +479,8 @@ export function Stage() {
       aria-label="Vue 3D interactive de l'appareil. Équivalent clavier : utilisez le plan de cabine ci-dessous pour choisir un siège et les boutons Sections pour naviguer."
     >
       <Canvas
-        frameloop="demand"
+        /* continuous frames only while the view auto-orbits */
+        frameloop={autoRotate ? 'always' : 'demand'}
         dpr={[1, 2]}
         camera={{ fov: 32, position: initialCam, near: 0.1, far: 60 }}
         gl={{

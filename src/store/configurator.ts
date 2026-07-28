@@ -6,6 +6,14 @@ export type ViewMode = 'exterior' | 'interior'
 export type Screen = 'configure' | 'summary' | 'confirmed'
 /** Exterior render mode — flat 2D profile (default) or free 3D. */
 export type ViewDimension = '2d' | '3d'
+/** Cheatline livery — 'default' keeps each aircraft's own accent. */
+export type LiveryId = 'default' | 'gold' | 'steel' | 'graphite'
+
+export const LIVERY_COLORS: Record<Exclude<LiveryId, 'default'>, string> = {
+  gold: '#c9a44a',
+  steel: '#8fa6ba',
+  graphite: '#4a4d52',
+}
 
 export interface BookingDraft {
   departure: string
@@ -20,6 +28,14 @@ interface ConfiguratorState {
   viewMode: ViewMode
   /** Exterior 2D/3D toggle — 3D never mounts until the user asks for it. */
   viewDimension: ViewDimension
+  /** Cheatline livery applied to the 3D model. */
+  livery: LiveryId
+  /** Slow orbit of the exterior 3D view. */
+  autoRotate: boolean
+  /** Bumped to ask the 3D stage to dolly in; wraps around at max zoom. */
+  zoomTick: number
+  /** Bumped to ask the 3D stage to restore its default framing. */
+  resetTick: number
   /** Index into the active aircraft's zones (0..3). */
   sectionIndex: number
   /** Seat hovered in 3D or on the floorplan — synced highlight. */
@@ -35,6 +51,10 @@ interface ConfiguratorState {
   nextAircraft: () => void
   prevAircraft: () => void
   toggleDimension: () => void
+  setLivery: (id: LiveryId) => void
+  toggleAutoRotate: () => void
+  requestZoom: () => void
+  requestReset: () => void
   enterInterior: (sectionIndex?: number) => void
   exitInterior: () => void
   setSection: (i: number) => void
@@ -59,6 +79,10 @@ export const useConfiguratorStore = create<ConfiguratorState>((set) => ({
   activeAircraftId: AIRCRAFT[0].id,
   viewMode: 'exterior',
   viewDimension: '2d',
+  livery: 'default',
+  autoRotate: false,
+  zoomTick: 0,
+  resetTick: 0,
   sectionIndex: 0,
   hoveredSeatId: null,
   seatSelections: {},
@@ -79,7 +103,15 @@ export const useConfiguratorStore = create<ConfiguratorState>((set) => ({
     set((s) => ({ activeAircraftId: shift(s.activeAircraftId, -1), hoveredSeatId: null })),
 
   toggleDimension: () =>
-    set((s) => ({ viewDimension: s.viewDimension === '2d' ? '3d' : '2d' })),
+    set((s) => ({
+      viewDimension: s.viewDimension === '2d' ? '3d' : '2d',
+      /* auto-orbit is a 3D-only affordance */
+      autoRotate: s.viewDimension === '2d' ? s.autoRotate : false,
+    })),
+  setLivery: (id) => set({ livery: id }),
+  toggleAutoRotate: () => set((s) => ({ autoRotate: !s.autoRotate })),
+  requestZoom: () => set((s) => ({ zoomTick: s.zoomTick + 1 })),
+  requestReset: () => set((s) => ({ resetTick: s.resetTick + 1, autoRotate: false })),
 
   enterInterior: (sectionIndex) =>
     set((s) => ({

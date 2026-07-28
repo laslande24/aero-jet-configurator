@@ -1,5 +1,9 @@
 import { AIRCRAFT_BY_ID } from '@/data/aircraft'
-import { useConfiguratorStore } from '@/store/configurator'
+import {
+  useConfiguratorStore,
+  LIVERY_COLORS,
+  type LiveryId,
+} from '@/store/configurator'
 import { PillNav, type NavItem } from '@/components/PillNav'
 import { FloatingButton } from '@/components/FloatingButton'
 import { AircraftCard } from '@/components/AircraftCard'
@@ -11,13 +15,22 @@ import { Cabin2DView } from '@/components/Cabin2DView'
 import { SummaryPanel } from '@/features/booking/SummaryPanel'
 import { Confirmation } from '@/features/booking/Confirmation'
 import { prefersReducedMotion } from '@/lib/motion'
-import { Suspense, lazy, useLayoutEffect, useRef } from 'react'
+import { cn } from '@/lib/cn'
+import { Suspense, lazy, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 
 /* three.js lives in its own chunk — the shell paints before the 3D loads. */
 const Stage = lazy(() =>
   import('@/features/stage/Stage').then((m) => ({ default: m.Stage })),
 )
+
+/* Livery choices offered by the palette tool — 'default' = the aircraft's own. */
+const LIVERY_SWATCHES: Array<{ id: LiveryId; label: string; swatch: string }> = [
+  { id: 'default', label: "Livrée d'origine", swatch: 'var(--color-surface-sunken)' },
+  { id: 'gold', label: 'Filet or', swatch: LIVERY_COLORS.gold },
+  { id: 'steel', label: 'Filet acier', swatch: LIVERY_COLORS.steel },
+  { id: 'graphite', label: 'Filet graphite', swatch: LIVERY_COLORS.graphite },
+]
 
 /* Shown while the 3D chunk streams in — quiet pulse, no spinner. */
 function StageSkeleton() {
@@ -62,10 +75,27 @@ export default function ConfiguratorScreen() {
   const closeSummary = useConfiguratorStore((s) => s.closeSummary)
   const aircraft = AIRCRAFT_BY_ID[activeId]
 
+  const livery = useConfiguratorStore((s) => s.livery)
+  const setLivery = useConfiguratorStore((s) => s.setLivery)
+  const autoRotate = useConfiguratorStore((s) => s.autoRotate)
+  const toggleAutoRotate = useConfiguratorStore((s) => s.toggleAutoRotate)
+  const requestZoom = useConfiguratorStore((s) => s.requestZoom)
+  const requestReset = useConfiguratorStore((s) => s.requestReset)
+
   const interior = viewMode === 'interior'
   const configure = screen === 'configure'
   /* 2D toggle only governs the exterior; the cabin visit is always 3D. */
   const flat2d = !interior && viewDimension === '2d'
+
+  /* Fullscreen applies to the stage frame, so the toolbar stays reachable. */
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [liveryOpen, setLiveryOpen] = useState(false)
+  const toggleFullscreen = () => {
+    const el = stageRef.current
+    if (!el) return
+    if (document.fullscreenElement) document.exitFullscreen()
+    else el.requestFullscreen?.()
+  }
 
   /* Staggered reveal of the visible screen's blocks — on load and screen change.
      gsap.from + clearProps: content is visible by default, never gated. */
@@ -175,9 +205,16 @@ export default function ConfiguratorScreen() {
           </div>
 
           <div data-reveal className="relative mt-1 flex flex-1 flex-col justify-center">
-            {/* left tool column */}
+            {/* left tool column — auto-orbit is 3D-only */}
             <div className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 flex-col gap-3 sm:flex">
-              <FloatingButton icon="video" label="Vue caméra" />
+              {!flat2d && (
+                <FloatingButton
+                  icon="video"
+                  label={autoRotate ? 'Arrêter la rotation' : 'Rotation automatique'}
+                  active={autoRotate}
+                  onClick={toggleAutoRotate}
+                />
+              )}
               {!interior && (
                 <FloatingButton
                   icon="cube"
@@ -188,17 +225,74 @@ export default function ConfiguratorScreen() {
               )}
             </div>
 
-            {/* circular toolbar */}
+            {/* circular toolbar — camera tools appear only where they apply */}
             <div className="absolute left-1/2 top-1 z-10 flex -translate-x-1/2 items-center gap-2.5">
-              <FloatingButton size="sm" icon="zoom-in" label="Zoom" />
-              <FloatingButton size="sm" icon="expand" label="Plein cadre" />
-              <FloatingButton size="sm" icon="seat" label="Voir les sièges" />
-              <FloatingButton size="sm" icon="palette" label="Matériaux et couleurs" />
-              <FloatingButton size="sm" icon="sliders" label="Réglages de la vue" />
+              {!flat2d && (
+                <FloatingButton size="sm" icon="zoom-in" label="Zoom" onClick={requestZoom} />
+              )}
+              <FloatingButton
+                size="sm"
+                icon="expand"
+                label="Plein cadre"
+                onClick={toggleFullscreen}
+              />
+              <FloatingButton
+                size="sm"
+                icon="seat"
+                label="Voir les sièges"
+                onClick={() => enterInterior(1)}
+              />
+              {!flat2d && (
+                <div className="relative">
+                  <FloatingButton
+                    size="sm"
+                    icon="palette"
+                    label="Livrée de l'appareil"
+                    active={liveryOpen || livery !== 'default'}
+                    onClick={() => setLiveryOpen((o) => !o)}
+                  />
+                  {liveryOpen && (
+                    <div
+                      role="group"
+                      aria-label="Livrée de l'appareil"
+                      className="absolute left-1/2 top-11 flex -translate-x-1/2 items-center gap-1.5
+                                 rounded-pill bg-card p-1.5 shadow-float"
+                    >
+                      {LIVERY_SWATCHES.map((sw) => (
+                        <button
+                          key={sw.id}
+                          type="button"
+                          aria-label={sw.label}
+                          aria-pressed={livery === sw.id}
+                          title={sw.label}
+                          onClick={() => setLivery(sw.id)}
+                          className={cn(
+                            'h-6 w-6 rounded-full border transition-transform duration-200',
+                            'hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2',
+                            'focus-visible:outline-ink',
+                            livery === sw.id
+                              ? 'border-ink ring-2 ring-ink ring-offset-1'
+                              : 'border-line-strong',
+                          )}
+                          style={{ background: sw.swatch }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!flat2d && (
+                <FloatingButton
+                  size="sm"
+                  icon="sliders"
+                  label="Réinitialiser la vue"
+                  onClick={requestReset}
+                />
+              )}
             </div>
 
             {/* stage: flat 2D by default (no WebGL), 3D on demand + interior */}
-            <div className="mx-auto w-full pb-1 pt-8 sm:px-4">
+            <div ref={stageRef} className="mx-auto w-full bg-surface pb-1 pt-8 sm:px-4">
               {flat2d ? (
                 <Cabin2DView />
               ) : (

@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { Html, Instance, Instances, RoundedBox } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { JetParams } from '@/data/aircraft'
-import { useConfiguratorStore } from '@/store/configurator'
+import { useConfiguratorStore, LIVERY_COLORS } from '@/store/configurator'
 
 /* Fuselage silhouette — (t along length, radius factor). Tuned for the
    long slender look of a Global 6000. */
@@ -283,7 +283,10 @@ interface ProceduralJetProps {
  */
 export function ProceduralJet({ params }: ProceduralJetProps) {
   const { fuselageLength: L, fuselageRadius: R, wingSpan, wingSweep, tailHeight, windows, accent } = params
-  const mats = useJetMaterials(accent)
+  const livery = useConfiguratorStore((s) => s.livery)
+  /* 'default' keeps the aircraft's own accent; a livery overrides it */
+  const accentColor = livery === 'default' ? accent : LIVERY_COLORS[livery]
+  const mats = useJetMaterials(accentColor)
 
   /* cutaway span — clamped to the cylindrical part of the hull */
   const cutawayX = L * 0.02
