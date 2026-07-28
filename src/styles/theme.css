@@ -1,0 +1,76 @@
+/* =============================================================================
+ * AÉRO — Design Tokens (source of truth)
+ * Extracted from the Figma reference (private-jet configurator).
+ * Tailwind v4 CSS-first theme: every token below also emits a utility
+ * (e.g. --color-canvas -> bg-canvas / text-canvas, --radius-app -> rounded-app).
+ * Edit tokens HERE only — never hardcode hex/px in components.
+ * ========================================================================== */
+
+@theme {
+  /* ---- Surfaces --------------------------------------------------------- */
+  --color-canvas: #c6c4d0;        /* outer lavender-grey backdrop            */
+  --color-canvas-deep: #b9b7c5;   /* backdrop depth (radial gradient foot)   */
+  --color-surface: #edecea;       /* warm off-white app panel                */
+  --color-surface-sunken: #e4e3e1;/* inset zones inside the panel            */
+  --color-card: #ffffff;          /* white floating cards                    */
+  --color-card-muted: #f4f4f3;    /* floorplan / secondary card              */
+
+  /* ---- Ink / text ------------------------------------------------------- */
+  --color-ink: #131315;           /* near-black headings + active pills      */
+  --color-ink-soft: #3a3a40;      /* strong body text                        */
+  --color-ink-muted: #6f6f77; /* AA on card/surface */
+  --color-danger: #a8392f;        /* erreurs de formulaire — calme, AA card  */
+  --color-ink-subtle: #c2c2c7;    /* faint captions / eyebrow                */
+
+  /* ---- Brand ------------------------------------------------------------ */
+  --color-steel: #a6bacb;         /* steel-blue aircraft card                */
+  --color-steel-deep: #8fa6ba;    /* steel hover / text on light             */
+  --color-steel-soft: #c8d4de;    /* steel tint / hover fills                */
+  --color-gold: #c9a86a;          /* champagne micro-accent (jet pinstripe)  */
+  --color-gold-soft: #e3d2ac;     /* gold tint                               */
+
+  /* ---- Cabin / seat states (future seat map) ---------------------------- */
+  --color-seat-free: #ffffff;     /* selectable seat                         */
+  --color-seat-hover: #dfe6ee;    /* seat hover                              */
+  --color-seat-active: #131315;   /* chosen seat                             */
+  --color-seat-taken: #d8d8da;    /* occupied / unavailable                  */
+
+  /* ---- Lines ------------------------------------------------------------ */
+  --color-line: #e6e5e3;          /* hairline dividers / borders             */
+  --color-line-strong: #d5d4d2;   /* stronger separators                     */
+
+  /* ---- Typography ------------------------------------------------------- */
+  --font-display: 'General Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Radius ----------------------------------------------------------- */
+  --radius-pill: 999px;
+  --radius-app: 2rem;    /* 32px — outer app frame          */
+  --radius-card: 1.5rem; /* 24px — cards                    */
+  --radius-md: 1rem;     /* 16px — inputs / medium blocks   */
+  --radius-sm: 0.75rem;  /* 12px — chips / small controls   */
+
+  /* ---- Elevation (soft, diffuse, low-opacity) --------------------------- */
+  --shadow-sm: 0 1px 2px rgb(20 20 30 / 0.04), 0 1px 3px rgb(20 20 30 / 0.03);
+  --shadow-card: 0 10px 30px -12px rgb(24 24 40 / 0.14), 0 3px 8px rgb(24 24 40 / 0.05);
+  --shadow-float: 0 6px 18px -4px rgb(24 24 40 / 0.16), 0 2px 5px rgb(24 24 40 / 0.08);
+  --shadow-jet: 0 46px 70px -28px rgb(28 28 55 / 0.28);
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-premium: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 200ms;
+  --duration-base: 400ms;
+  --duration-slow: 700ms;
+}
+
+/* Reduced motion — coupe transitions et animations partout (GSAP gère les siennes). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

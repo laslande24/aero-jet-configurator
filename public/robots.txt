@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# Pas de sitemap : application mono-page.

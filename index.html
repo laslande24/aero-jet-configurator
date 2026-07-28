@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Aéro — réservation de jet privé en 3D interactive et immersive."
+    />
+    <!-- Fonts self-hosted (public/fonts) — declared in src/styles/fonts.css. -->
+    <link
+      rel="preload"
+      href="/fonts/generalsans-600.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/satoshi-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <title>Aéro — Jet privé · 3D</title>
+    <meta
+      name="description"
+      content="Configurateur de jet privé en 3D interactive : comparez les appareils, visitez la cabine, choisissez votre siège et réservez votre vol. Démonstration."
+    />
+    <meta name="theme-color" content="#edecea" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Aéro — Réservation de jet privé en 3D" />
+    <meta
+      property="og:description"
+      content="Visitez la cabine en 3D, choisissez votre siège, réservez votre vol. Démonstration interactive."
+    />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Structured data — servi dans le HTML initial (pas d'injection JS) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Aéro",
+        "description": "Configurateur-réservation de jet privé en 3D interactive (démonstration) : choix de l'appareil, visite de cabine, sélection du siège, réservation.",
+        "applicationCategory": "TravelApplication",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requires JavaScript and WebGL",
+        "inLanguage": "fr"
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
