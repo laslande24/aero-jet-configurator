@@ -1,5 +1,8 @@
 # Aéro — Réservation de jet privé en 3D
 
+[![CI](https://github.com/laslande24/aero-jet-configurator/actions/workflows/ci.yml/badge.svg)](https://github.com/laslande24/aero-jet-configurator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
+
 Configurateur-réservation de jet privé, interactif et immersif : comparez les
 appareils, visitez la cabine en 3D, choisissez votre siège sur le plan de
 cabine, puis réservez votre vol. Démonstration front-end complète — aucun
@@ -56,9 +59,17 @@ persistance par avion, validation du formulaire, confirmation, cas limites)
 est couvert par un test Playwright :
 
 ```bash
-# le serveur de dev doit tourner sur :5180
-python tests/test_booking_flow.py
+pip install playwright && python -m playwright install chromium
+
+# un serveur doit écouter sur :5180 (npm run dev ou npm run preview)
+npm run test:e2e
 ```
+
+L'intégration continue rejoue lint, types, build et ce parcours à chaque push.
+
+## Licence
+
+[MIT](LICENSE)
 
 ## Structure
 

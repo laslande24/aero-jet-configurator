@@ -20,7 +20,10 @@ export class ModelBoundary extends Component<ModelBoundaryProps, ModelBoundarySt
   }
 
   componentDidUpdate(prev: ModelBoundaryProps) {
+    /* Re-arming an error boundary requires a guarded setState here; the extra
+       render only happens when the model URL actually changes. */
     if (prev.resetKey !== this.props.resetKey && this.state.failed) {
+      // oxlint-disable-next-line react/no-did-update-set-state
       this.setState({ failed: false })
     }
   }

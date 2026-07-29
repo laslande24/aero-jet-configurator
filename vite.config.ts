@@ -7,6 +7,8 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: { port: 5180, strictPort: true },
+  /* the E2E suite always targets :5180, dev server or production preview */
+  preview: { port: 5180, strictPort: true },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
