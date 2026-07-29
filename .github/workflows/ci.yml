@@ -18,7 +18,9 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      # `npm ci` needs a lock resolved for the target platform; this one is
+      # generated on Windows, where npm hoists the wasm fallbacks differently.
+      - run: npm install --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
@@ -49,7 +51,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - run: npm ci
+      # `npm ci` needs a lock resolved for the target platform; this one is
+      # generated on Windows, where npm hoists the wasm fallbacks differently.
+      - run: npm install --no-audit --no-fund
 
       - name: Build
         run: npm run build
