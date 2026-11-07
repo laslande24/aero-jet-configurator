@@ -8,6 +8,8 @@ appareils, visitez la cabine en 3D, choisissez votre siège sur le plan de
 cabine, puis réservez votre vol. Démonstration front-end complète — aucun
 paiement réel.
 
+**En ligne :** https://romaricsoh-aero.vercel.app
+
 ![Aperçu de l'application](docs/screenshot.png)
 
 ## Fonctionnalités
@@ -54,7 +56,7 @@ npm run preview    # sert le build
 
 ## Tests
 
-Le parcours de réservation complet (20 assertions : sélection de siège,
+Le parcours de réservation complet (21 assertions : sélection de siège,
 persistance par avion, validation du formulaire, confirmation, cas limites)
 est couvert par un test Playwright :
 

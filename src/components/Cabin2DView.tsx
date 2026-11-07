@@ -71,10 +71,9 @@ export function Cabin2DView() {
         ))}
       </div>
 
-      <p
-        className="pointer-events-none absolute bottom-2 left-2 text-[10px] uppercase
-                   tracking-[0.22em] text-ink-muted"
-      >
+      {/* in the flow under the picture: absolute, it sat on the landing gear,
+          and on the jet itself once the picture shrinks on phones */}
+      <p className="mt-1 pl-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted">
         Cliquer la porte ou les hublots pour entrer · cube = 3D
       </p>
     </div>
